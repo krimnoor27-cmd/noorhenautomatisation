@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flux — Automatisation IA avec Make & n8n</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg:#0E2B29;
+    --bg-2:#123734;
+    --panel:#153F3B;
+    --ink:#F1EEE3;
+    --ink-dim:#B9CFC9;
+    --amber:#E4A63C;
+    --line:rgba(241,238,227,0.14);
+    --radius:4px;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:inherit;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px); scroll-behavior:smooth;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.55;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    margin:0 0 0.4em 0;
+    letter-spacing:-0.01em;
+  }
+  .mono{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.82rem;
+    color:var(--amber);
+  }
+  a{color:inherit;}
+  .wrap{
+    max-width:920px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+  header.top{
+    position:sticky;
+    top:0;
+    top:env(safe-area-inset-top,0px);
+    padding-top:calc(20px + env(safe-area-inset-top,0px));
+    padding-bottom:20px;
+    background:linear-gradient(var(--bg) 80%, transparent);
+    z-index:10;
+  }
+  header.top .wrap{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .brand{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:1.15rem;
+  }
+  nav a{
+    text-decoration:none;
+    color:var(--ink-dim);
+    margin-left:24px;
+    font-size:0.92rem;
+  }
+  nav a:hover, nav a:focus-visible{color:var(--ink);}
+
+  section{padding:64px 0;}
+  .hero{padding-top:32px;}
+  .hero .mono{display:block;margin-bottom:18px;}
+  .hero h1{
+    font-size:clamp(2.1rem,5vw,3.4rem);
+    max-width:11ch;
+  }
+  .hero p.lede{
+    max-width:52ch;
+    font-size:1.1rem;
+    color:var(--ink-dim);
+    margin:20px 0 34px 0;
+  }
+  .cta-row{display:flex;gap:14px;flex-wrap:wrap;}
+  .btn{
+    display:inline-block;
+    padding:13px 22px;
+    border-radius:var(--radius);
+    text-decoration:none;
+    font-size:0.95rem;
+    font-weight:500;
+  }
+  .btn.primary{background:var(--amber); color:#20200f;}
+  .btn.primary:hover, .btn.primary:focus-visible{background:#efb457;}
+  .btn.ghost{border:1px solid var(--line); color:var(--ink);}
+  .btn.ghost:hover, .btn.ghost:focus-visible{border-color:var(--ink-dim);}
+
+  /* flow diagram */
+  .flow{
+    margin-top:52px;
+    display:flex;
+    align-items:center;
+    gap:0;
+    overflow-x:auto;
+    padding-bottom:8px;
+  }
+  .node{
+    flex:0 0 auto;
+    border:1px solid var(--line);
+    background:var(--panel);
+    border-radius:var(--radius);
+    padding:14px 18px;
+    font-size:0.85rem;
+    white-space:nowrap;
+  }
+  .node .k{display:block;color:var(--ink-dim);font-size:0.72rem;margin-bottom:3px;}
+  .pipe{
+    flex:0 0 40px;
+    height:1px;
+    background:repeating-linear-gradient(90deg, var(--amber) 0 6px, transparent 6px 11px);
+  }
+
+  hr.rule{border:none;border-top:1px solid var(--line);margin:0;}
+
+  .section-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:20px;
+    margin-bottom:34px;
+    flex-wrap:wrap;
+  }
+  .section-head h2{font-size:1.7rem;}
+  .section-head .mono{white-space:nowrap;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .cell{
+    background:var(--bg);
+    padding:26px;
+  }
+  .cell h3{font-size:1.08rem;font-weight:600;font-family:'Inter',sans-serif;margin-bottom:8px;}
+  .cell p{color:var(--ink-dim);font-size:0.95rem;margin:0;}
+
+  .tools{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+  .tool{
+    border:1px solid var(--line);
+    padding:8px 14px;
+    border-radius:var(--radius);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.85rem;
+    color:var(--ink);
+  }
+  button.tool{
+    background:var(--bg);
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  button.tool:hover, button.tool:focus-visible{
+    border-color:var(--amber);
+    color:var(--amber);
+  }
+  button.tool[aria-expanded="true"]{
+    background:var(--amber);
+    border-color:var(--amber);
+    color:#20200f;
+  }
+
+  .portfolio{
+    display:none;
+    margin-top:24px;
+    padding-top:24px;
+    border-top:1px solid var(--line);
+  }
+  .portfolio.open{display:block;}
+  .portfolio .mono{display:block;margin-bottom:16px;}
+  .project-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:18px;
+  }
+  .project-card{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:var(--panel);
+  }
+  .project-photo{
+    aspect-ratio:4/3;
+    background:
+      linear-gradient(135deg, transparent 48%, var(--line) 48% 52%, transparent 52%),
+      var(--bg-2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--ink-dim);
+    font-size:0.78rem;
+    text-align:center;
+    padding:12px;
+  }
+  .project-card .body{padding:16px;}
+  .project-card h4{
+    margin:0 0 6px 0;
+    font-family:'Inter',sans-serif;
+    font-size:0.98rem;
+    font-weight:600;
+  }
+  .project-card p{
+    margin:0;
+    color:var(--ink-dim);
+    font-size:0.88rem;
+  }
+
+  @media (max-width:640px){
+    .project-grid{grid-template-columns:1fr;}
+  }
+
+  .steps{counter-reset:step;}
+  .step{
+    display:grid;
+    grid-template-columns:56px 1fr;
+    gap:18px;
+    padding:22px 0;
+    border-top:1px solid var(--line);
+  }
+  .step:last-child{border-bottom:1px solid var(--line);}
+  .step .num{
+    counter-increment:step;
+    font-family:'Fraunces',serif;
+    font-size:1.4rem;
+    color:var(--amber);
+  }
+  .step .num::before{content:counter(step, decimal-leading-zero);}
+  .step h3{font-family:'Inter',sans-serif;font-size:1.05rem;font-weight:600;margin-bottom:6px;}
+  .step p{color:var(--ink-dim);margin:0;font-size:0.95rem;max-width:56ch;}
+
+  .contact{
+    background:var(--panel);
+    border-radius:var(--radius);
+    padding:46px;
+    text-align:left;
+  }
+  .contact h2{font-size:1.9rem;max-width:16ch;}
+  .contact p{color:var(--ink-dim);max-width:48ch;margin:14px 0 26px 0;}
+
+  footer{
+    padding:34px 0 calc(34px + env(safe-area-inset-bottom,0px)) 0;
+    color:var(--ink-dim);
+    font-size:0.85rem;
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  @media (max-width:640px){
+    .grid{grid-template-columns:1fr;}
+    .contact{padding:30px;}
+    nav a{margin-left:14px;font-size:0.85rem;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">Flux</div>
+    <nav>
+      <a href="#services">Services</a>
+      <a href="#methode">Méthode</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <span class="mono">automatisation · Make · n8n</span>
+    <h1>Vos tâches répétitives, transformées en flux automatisés.</h1>
+    <p class="lede">J'aide les entreprises à connecter leurs outils et à automatiser leurs processus avec Make et n8n — moins de saisie manuelle, moins d'erreurs, plus de temps pour l'essentiel.</p>
+    <div class="cta-row">
+      <a class="btn primary" href="#contact">Discuter de votre projet</a>
+      <a class="btn ghost" href="#services">Voir les services</a>
+    </div>
+
+    <div class="flow" aria-hidden="true">
+      <div class="node"><span class="k">déclencheur</span>Nouveau formulaire</div>
+      <div class="pipe"></div>
+      <div class="node"><span class="k">action</span>Tri &amp; enrichissement</div>
+      <div class="pipe"></div>
+      <div class="node"><span class="k">action</span>Mise à jour CRM</div>
+      <div class="pipe"></div>
+      <div class="node"><span class="k">résultat</span>Notification équipe</div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="services">
+    <div class="section-head">
+      <h2>Ce que je fais</h2>
+      <span class="mono">services</span>
+    </div>
+    <div class="grid">
+      <div class="cell">
+        <h3>Automatisation de processus</h3>
+        <p>Identification des tâches manuelles répétitives et conception de flux qui les remplacent, de bout en bout.</p>
+      </div>
+      <div class="cell">
+        <h3>Intégrations sur mesure</h3>
+        <p>Connexion de vos outils (CRM, formulaires, messagerie, tableurs, API) via des scénarios Make ou des workflows n8n.</p>
+      </div>
+      <div class="cell">
+        <h3>Optimisation de l'existant</h3>
+        <p>Audit de vos automatisations actuelles pour les rendre plus fiables, plus rapides et plus faciles à maintenir.</p>
+      </div>
+      <div class="cell">
+        <h3>Suivi &amp; maintenance</h3>
+        <p>Surveillance des scénarios en production, gestion des erreurs et ajustements au fil de l'évolution de vos besoins.</p>
+      </div>
+    </div>
+
+    <p class="mono" style="margin-top:28px;">outils maîtrisés — cliquez pour voir des projets</p>
+    <div class="tools">
+      <button type="button" class="tool" aria-expanded="false" data-target="portfolio-make">Make (Integromat)</button>
+      <button type="button" class="tool" aria-expanded="false" data-target="portfolio-n8n">n8n</button>
+      <button type="button" class="tool" aria-expanded="false" data-target="portfolio-webhooks">Webhooks</button>
+      <button type="button" class="tool" aria-expanded="false" data-target="portfolio-api">API REST</button>
+      <button type="button" class="tool" aria-expanded="false" data-target="portfolio-google">Google Workspace</button>
+      <button type="button" class="tool" aria-expanded="false" data-target="portfolio-airtable">Airtable</button>
+    </div>
+
+    <div class="portfolio" id="portfolio-make">
+      <span class="mono">projets Make</span>
+      <div class="project-grid">
+        <div class="project-card">
+          <div class="project-photo">photo du projet 1</div>
+          <div class="body">
+            <h4>Projet 1</h4>
+            <p>Décrivez ici le scénario Make mis en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 2</div>
+          <div class="body">
+            <h4>Projet 2</h4>
+            <p>Décrivez ici le scénario Make mis en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 3</div>
+          <div class="body">
+            <h4>Projet 3</h4>
+            <p>Décrivez ici le scénario Make mis en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="portfolio" id="portfolio-n8n">
+      <span class="mono">projets n8n</span>
+      <div class="project-grid">
+        <div class="project-card">
+          <div class="project-photo">photo du projet 1</div>
+          <div class="body">
+            <h4>Projet 1</h4>
+            <p>Décrivez ici le workflow n8n mis en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 2</div>
+          <div class="body">
+            <h4>Projet 2</h4>
+            <p>Décrivez ici le workflow n8n mis en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 3</div>
+          <div class="body">
+            <h4>Projet 3</h4>
+            <p>Décrivez ici le workflow n8n mis en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="portfolio" id="portfolio-webhooks">
+      <span class="mono">projets Webhooks</span>
+      <div class="project-grid">
+        <div class="project-card">
+          <div class="project-photo">photo du projet 1</div>
+          <div class="body">
+            <h4>Projet 1</h4>
+            <p>Décrivez ici l'intégration par webhook mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 2</div>
+          <div class="body">
+            <h4>Projet 2</h4>
+            <p>Décrivez ici l'intégration par webhook mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 3</div>
+          <div class="body">
+            <h4>Projet 3</h4>
+            <p>Décrivez ici l'intégration par webhook mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="portfolio" id="portfolio-api">
+      <span class="mono">projets API REST</span>
+      <div class="project-grid">
+        <div class="project-card">
+          <div class="project-photo">photo du projet 1</div>
+          <div class="body">
+            <h4>Projet 1</h4>
+            <p>Décrivez ici l'intégration API mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 2</div>
+          <div class="body">
+            <h4>Projet 2</h4>
+            <p>Décrivez ici l'intégration API mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 3</div>
+          <div class="body">
+            <h4>Projet 3</h4>
+            <p>Décrivez ici l'intégration API mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="portfolio" id="portfolio-google">
+      <span class="mono">projets Google Workspace</span>
+      <div class="project-grid">
+        <div class="project-card">
+          <div class="project-photo">photo du projet 1</div>
+          <div class="body">
+            <h4>Projet 1</h4>
+            <p>Décrivez ici l'automatisation Google Workspace mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 2</div>
+          <div class="body">
+            <h4>Projet 2</h4>
+            <p>Décrivez ici l'automatisation Google Workspace mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 3</div>
+          <div class="body">
+            <h4>Projet 3</h4>
+            <p>Décrivez ici l'automatisation Google Workspace mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="portfolio" id="portfolio-airtable">
+      <span class="mono">projets Airtable</span>
+      <div class="project-grid">
+        <div class="project-card">
+          <div class="project-photo">photo du projet 1</div>
+          <div class="body">
+            <h4>Projet 1</h4>
+            <p>Décrivez ici l'intégration Airtable mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 2</div>
+          <div class="body">
+            <h4>Projet 2</h4>
+            <p>Décrivez ici l'intégration Airtable mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+        <div class="project-card">
+          <div class="project-photo">photo du projet 3</div>
+          <div class="body">
+            <h4>Projet 3</h4>
+            <p>Décrivez ici l'intégration Airtable mise en place et le résultat obtenu pour ce client.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="methode">
+    <div class="section-head">
+      <h2>Comment ça se passe</h2>
+      <span class="mono">méthode</span>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num"></div>
+        <div>
+          <h3>Diagnostic</h3>
+          <p>On identifie ensemble les tâches qui vous font perdre du temps et celles qui présentent le plus de valeur à automatiser.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num"></div>
+        <div>
+          <h3>Conception du flux</h3>
+          <p>Je construis le scénario dans Make ou n8n, avec gestion des cas particuliers et des erreurs.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num"></div>
+        <div>
+          <h3>Mise en production</h3>
+          <p>Tests, activation, et transfert de connaissance pour que vous restiez autonome sur votre flux.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="contact">
+    <div class="contact">
+      <h2>Un processus à automatiser en tête ?</h2>
+      <p>Décrivez-moi votre situation actuelle et ce que vous aimeriez ne plus faire à la main — on regarde ensemble si Make ou n8n peut s'en charger.</p>
+      <a class="btn primary" href="mailto:contact@votredomaine.com">Écrire un email</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <span>Flux — Automatisation IA</span>
+  <span>Make &amp; n8n</span>
+</footer>
+
+<script>
+  document.querySelectorAll('.tool[data-target]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var panel = document.getElementById(btn.dataset.target);
+      var isOpen = panel.classList.contains('open');
+
+      document.querySelectorAll('.portfolio.open').forEach(function(p){
+        p.classList.remove('open');
+      });
+      document.querySelectorAll('.tool[data-target]').forEach(function(b){
+        b.setAttribute('aria-expanded', 'false');
+      });
+
+      if(!isOpen){
+        panel.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+</script>
+</body>
+</html>
